@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Виртуальный стенд «Основы автоматики»</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body><header class="top">
+  <div>
+    <h1>Виртуальный стенд «Основы автоматики»</h1>
+    <p>Фото стенда с рабочими гнёздами. Тяните провод от гнезда к гнезду, переключайте тумблеры и ручки R и C, смотрите, как ведёт себя схема.</p>
+  </div>
+  <div class="bar">
+    <button class="btn primary" id="pwr" type="button" aria-pressed="false">Питание выключено</button>
+    <label class="bar" for="speed">Скорость
+      <select id="speed"><option value="0.01">0,01×</option><option value="0.1">0,1×</option><option value="1" selected>1×</option><option value="3">3×</option></select>
+    </label>
+    <span class="clock" id="clock" title="Время модели">0 мс</span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="col">
+    <div class="stage" id="stage">
+      <div class="warn" id="warn" hidden>Замыкание: «+5 В» соединён с общим проводом</div>
+      <svg id="stand" viewBox="0 0 1160 890" role="img" aria-label="Лицевая панель стенда Основы автоматики">
+        <image href="stand.jpg" x="0" y="0" width="1160" height="890"/>
+      </svg>
+      <div class="tip" id="tip" hidden></div>
+    </div>
+    <div class="hintrow">
+      <span><b>Провод:</b> тяните от гнезда к гнезду</span>
+      <span><b>Убрать провод:</b> клик по нему</span>
+      <span><b>Ручки R и C:</b> клик, колесо</span>
+      <span><b>Кнопки SB:</b> держать нажатой</span>
+      <span><b>Щуп осциллографа:</b> Shift+клик (CH1), Alt+клик (CH2)</span>
+    </div>
+
+    <section class="panel scope" id="scopeBox" aria-label="Осциллограф">
+      <div class="scopebar">
+        <h2 class="h2flat">Осциллограф</h2>
+        <div class="legend">
+          <button class="btn small pickBtn" type="button" data-ch="0" aria-pressed="false">Щуп CH1</button>
+          <button class="btn small pickBtn" type="button" data-ch="1" aria-pressed="false">Щуп CH2</button>
+          <button class="btn small" type="button" id="clrProbe">Снять щупы</button>
+        </div>
+        <label class="bar" for="tb">Развёртка
+          <select id="tb"><option value="0.0001">100 мкс/дел</option><option value="0.0005">500 мкс/дел</option><option value="0.001">1 мс/дел</option><option value="0.002" selected>2 мс/дел</option><option value="0.005">5 мс/дел</option><option value="0.01">10 мс/дел</option><option value="0.05">50 мс/дел</option></select>
+        </label>
+        <label class="bar" for="smode">Режим
+          <select id="smode"><option value="auto">непрерывный</option><option value="single">ждущий (по фронту CH1)</option></select>
+        </label>
+        <label class="bar" for="slope">Фронт
+          <select id="slope"><option value="rise">нарастающий</option><option value="fall">спадающий</option></select>
+        </label>
+        <button class="btn small" type="button" id="arm" hidden>Взвести</button>
+      </div>
+      <canvas id="scope" aria-label="Осциллограммы сигналов"></canvas>
+    </section>
+  </div>
+
+  <aside class="side">
+    <section class="panel">
+      <h2>Готовые схемы</h2>
+      <div class="presets" id="presets"></div>
+      <div id="hintBox" class="hintbox" hidden><p class="hint" id="hint"></p></div>
+    </section>
+    <section class="panel">
+      <h2>Провода</h2>
+      <div class="swatches" id="colors"></div>
+      <div class="bar mt10">
+        <button class="btn small" type="button" id="undo">Отменить</button>
+        <button class="btn small" type="button" id="redo">Вернуть</button>
+        <button class="btn small" type="button" id="clear">Убрать все</button>
+      </div>
+      <label class="check"><input type="checkbox" id="showLv"> Показывать уровни на гнёздах</label>
+      <p class="note">Оранжевый — логическая «1», синий — «0». Серый — зона неопределённости.</p>
+    </section>
+    <section class="panel">
+      <details>
+        <summary>Параметры модели</summary>
+        <div class="grid2">
+          <label for="pOn">Срабатывание реле, мс</label><input id="pOn" inputmode="decimal">
+          <label for="pOff">Отпускание реле, мс</label><input id="pOff" inputmode="decimal">
+          <label for="pTb">Дребезг тумблера, макс. при размыкании</label><input id="pTb" inputmode="numeric">
+          <label for="pTm">Дребезг тумблера, макс. при замыкании</label><input id="pTm" inputmode="numeric">
+          <label for="pRb">Дребезг реле, макс. при размыкании</label><input id="pRb" inputmode="numeric">
+          <label for="pRm">Дребезг реле, макс. при замыкании</label><input id="pRm" inputmode="numeric">
+        </div>
+        <p class="note">Число импульсов дребезга в каждом опыте выбирается случайно от 0 до заданного максимума. Подберите значения по настоящему стенду.</p>
+        <button class="btn small" type="button" id="resetCnt" class="btn small mt8">Обнулить счётчики напрямую</button>
+      </details>
+    </section>
+    <section class="panel">
+      <h2>Что принято в модели</h2>
+      <ul class="assume">
+        <li>Логика 5 В, входы с подтяжкой: неподключённый вход читается как «1».</li>
+        <li>Входы счётчиков CN и R подтянуты к нулю, счёт по переднему фронту, цифры 0–9.</li>
+        <li>Для двух разрядов: выход «8» первого счётчика через инвертор на CN второго.</li>
+        <li>Реле K1…K5: левое гнездо — размыкающий (NC), правое — замыкающий (NO), среднее — общий.</li>
+        <li>Тумблеры SA3…SA6: вверх — верхнее гнездо соединено с общим, вниз — нижнее.</li>
+        <li>Программируемое реле ONI не моделируется: тумблеры I2…I8 только зажигают свои индикаторы.</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+<script src="app.js"></script>
+
+</body>
+</html>
